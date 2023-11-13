@@ -10,12 +10,37 @@ provider:
   iam: 
     role: ${env:AWS_IAM_ROLE}
 
-functions:
-  function1:
-    handler: index.handler
-
 plugins:
   - serverless-webpack
 
 package:
   individually: true
+
+functions:
+  getRooms:
+    handler: functions/getRooms/index.handler
+    events:
+     - httpApi:
+       path: '/rooms'
+       method: GET
+  postRoom:
+    handler: functions/postRoom/index.handler
+    events:
+      - httpApi:
+        path: '/rooms'
+        method: POST
+
+
+resources:
+  Resources:
+    bookitDb:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: rooms-db
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
