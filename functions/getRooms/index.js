@@ -9,5 +9,5 @@ exports.handler = async (event, context) => {
     })
     .promise();
 
-  return sendResponse(200, { success: true, dogs: Items });
+  return sendResponse(200, { success: true, rooms: Items });
 };
