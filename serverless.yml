@@ -20,15 +20,16 @@ functions:
   getRooms:
     handler: functions/getRooms/index.handler
     events:
-     - httpApi:
-       path: '/rooms'
-       method: GET
+      - httpApi:
+          path: '/rooms'
+          method: GET
+
   postRoom:
     handler: functions/postRoom/index.handler
     events:
       - httpApi:
-        path: '/rooms'
-        method: POST
+          path: '/rooms'
+          method: POST
 
 
 resources:
