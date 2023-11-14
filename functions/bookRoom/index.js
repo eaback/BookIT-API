@@ -9,6 +9,7 @@ async function bookRoom(roomId) {
     //Här skall vi skapa ett nytt booking-objekt
     id: `${bookingId}`,
   };
+
   try {
     await db
       .update({
@@ -30,9 +31,46 @@ async function bookRoom(roomId) {
   }
 }
 
+async function getRoom(roomId) {
+  let response = {};
+  try {
+    const room = await db
+      .get({
+        TableName: "rooms-db",
+        Key: {
+          id: roomId,
+        },
+      })
+      .promise();
+
+    if (room.Item) {
+      response = { success: true, message: "Room found", room: room.Item };
+    } else {
+      response = { success: false, message: "Room not found" };
+    }
+  } catch (error) {
+    console.error(error);
+    response = {
+      success: false,
+      message: "Something went wrong",
+      error: error,
+    };
+  }
+  return response;
+}
+
 exports.handler = async (event, context) => {
   const roomId = event.pathParameters.roomId;
+  const room = await getRoom(roomId);
+
+  if (!room.success) {
+    return sendResponse(400, room);
+  }
+
   const response = await bookRoom(roomId);
 
-  return sendResponse(response.success ? 200 : response.error.errorCode, response);
+  return sendResponse(response.success ? 200 : 400, {
+    response: response,
+    room: room,
+  });
 };
