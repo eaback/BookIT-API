@@ -83,7 +83,7 @@ async function bookRoom(roomId, newBooking) {
 async function getRoom(roomId) {
   let response = {};
   try {
-    const room = await db
+    const data = await db
       .get({
         TableName: "rooms-db",
         Key: {
@@ -92,8 +92,9 @@ async function getRoom(roomId) {
       })
       .promise();
 
-    if (room.Item) {
-      response = { success: true, message: "Room found", room: room.Item };
+    if (data.Item) {
+      const room = data.Item;
+      response = { success: true, message: "Room found", room: room };
     } else {
       response = { success: false, message: "Room not found" };
     }
