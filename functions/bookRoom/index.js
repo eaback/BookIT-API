@@ -6,6 +6,7 @@ const uuid = require("uuid");
 async function bookRoom(roomId) {
   const bookingId = uuid.v4();
   const newBooking = {
+    //Här skall vi skapa ett nytt booking-objekt
     id: `${bookingId}`,
   };
   try {
