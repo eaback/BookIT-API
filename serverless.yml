@@ -31,12 +31,28 @@ functions:
           path: '/rooms'
           method: POST
 
+  deleteRoom:
+    handler: functions/deleteRoom/index.handler
+    events:
+      - httpApi:
+          path: '/rooms/{roomId}'
+          method: DELETE
+
   bookRoom:
     handler: functions/bookRoom/index.handler
     events:
       - httpApi:
           path: '/bookings/{roomId}'
           method: POST
+
+  deleteBooking:
+    handler: functions/deleteBooking/index.handler
+    events:
+      - httpApi:
+          path: '/bookings/{roomId}'
+          method: DELETE
+
+
 
 
 resources:
