@@ -38,6 +38,20 @@ functions:
           path: '/bookings/{roomId}'
           method: POST
 
+  deleteBooking:
+    handler: functions/deleteRoom/index.handler
+    events:
+      - httpApi:
+          path: '/bookings/{roomId}'
+          method: DELETE
+
+  deleteRoom:
+    handler: functions/deleteRoom/index.handler
+    events:
+      - httpApi:
+          path: '/bookings/{roomId}'
+          method: DELETE
+
 
 resources:
   Resources:
