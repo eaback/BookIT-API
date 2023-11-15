@@ -24,6 +24,13 @@ functions:
           path: '/rooms'
           method: GET
 
+  getRoom:
+    handler: functions/getRoomById/index.handler
+    events:
+      - httpApi:
+          path: '/rooms/{roomId}'
+          method: GET
+
   postRoom:
     handler: functions/postRoom/index.handler
     events:
@@ -44,13 +51,6 @@ functions:
       - httpApi:
           path: '/bookings/{roomId}'
           method: POST
-
-  deleteBooking:
-    handler: functions/deleteBooking/index.handler
-    events:
-      - httpApi:
-          path: '/bookings/{roomId}'
-          method: DELETE
 
 
 
