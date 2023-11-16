@@ -2,7 +2,7 @@ const { sendResponse } = require("../../responses");
 const AWS = require('aws-sdk');
 const db = new AWS.DynamoDB.DocumentClient();
 
-// DELETE /rooms/{id}
+// DELETE /rooms/{roomId}
 
 exports.handler = async (event, context) => {
     const { roomId } = event.pathParameters;
