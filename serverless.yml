@@ -52,6 +52,13 @@ functions:
           path: '/bookings/{roomId}'
           method: POST
 
+  getBookings:
+    handler: functions/getBookings/index.handler
+    events:
+      - httpApi:
+          path: '/bookings'
+          method: GET
+
 
 
 
