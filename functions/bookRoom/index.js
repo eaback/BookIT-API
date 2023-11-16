@@ -9,6 +9,12 @@ exports.handler = async (event, context) => {
 
   const roomResponse = await getRoom(roomId);
 
+  const bookingInfoValidationResult = validateBookingInfo(bookingInfo);
+
+  return sendResponse(200, {
+    BookingInfoValidationResult: bookingInfoValidationResult,
+  });
+
   if (!roomResponse.success) {
     //First, we check for the room
     // If it doesn't exist, return with response from getRoom
@@ -29,6 +35,133 @@ exports.handler = async (event, context) => {
     bookingInfo: bookingInfo,
   });
 };
+
+// Validate booking information
+function validateBookingInfo(bookingInfo) {
+  // Define expected properties and their types
+  const expectedProperties = {
+    GuestName: "string",
+    GuestEmail: "string",
+    CheckInDate: "string",
+    CheckOutDate: "string",
+    TotalGuests: "number",
+  };
+
+  let validationResult = {
+    // we start off optimistically, adding failed checks later
+    Success: true,
+    UnexpectedProperties: "None",
+    GuestName: {
+      property: "Check ok",
+      value: "Check ok",
+    },
+    GuestEmail: {
+      property: "Check ok",
+      value: "Check ok",
+    },
+    CheckInDate: {
+      property: "Check ok",
+      value: "Check ok",
+    },
+    CheckOutDate: {
+      property: "Check ok",
+      value: "Check ok",
+    },
+    TotalGuests: {
+      property: "Check ok",
+      value: "Check ok",
+    },
+  };
+
+  const unexpectedProperties = Object.keys(bookingInfo).filter(
+    (property) => !expectedProperties.hasOwnProperty(property)
+  );
+
+  if (unexpectedProperties.length > 0) {
+    validationResult.Success = false;
+    validationResult.UnexpectedProperties = `${unexpectedProperties.join(
+      ", "
+    )}`;
+  }
+
+  // Check presence and type of each property
+  for (const [property, expectedType] of Object.entries(expectedProperties)) {
+    if (!bookingInfo.hasOwnProperty(property)) {
+      validationResult.Success = false;
+      validationResult[
+        property
+      ].property = `${property} is missing in booking information`;
+    }
+
+    if (typeof bookingInfo[property] !== expectedType) {
+      validationResult.Success = false;
+      validationResult[
+        property
+      ].value = `${property} should be of type ${expectedType}`;
+    }
+
+    if (expectedType === "string" && bookingInfo[property] === undefined) {
+      validationResult.Success = false;
+      validationResult[property].value = `${property} does not exist`;
+    } else if (
+      expectedType === "string" &&
+      
+      bookingInfo[property].trim() === ""
+    ) {
+      validationResult.Success = false;
+      validationResult[
+        property
+      ].value = `${property} should not be an empty string`;
+    }
+
+    if (
+      expectedType === "number" &&
+      (bookingInfo[property] < 1 || !Number.isInteger(bookingInfo[property]))
+    ) {
+      validationResult.Success = false;
+      validationResult[
+        property
+      ].value = `${property} should be a positive integer`;
+    }
+
+    if (
+      (property === "GuestEmail" && bookingInfo[property]) &&
+      !isValidEmailFormat(bookingInfo[property])
+    ) {
+      validationResult.Success = false;
+      validationResult[
+        property
+      ].value = `${property} is not a valid mail address`;
+    }
+
+    if (
+      ((property === "CheckInDate" && bookingInfo[property]) || (property === "CheckOutDate" && bookingInfo[property])) &&
+      !isValidDateFormat(bookingInfo[property])
+    ) {
+      validationResult.Success = false;
+      validationResult[
+        property
+      ].value = `${property} should be a date string in this template: 'yyyy-mm-dd'`;
+    }
+  }
+
+  // All checks done
+  return validationResult;
+}
+
+function isValidDateFormat(dateString) {
+  // Regular expression for yyyy-mm-dd format
+  const dateFormatRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+  return dateFormatRegex.test(dateString);
+}
+
+function isValidEmailFormat(emailString) {
+  // Regular expression for (local part)@(domain part).(top level domain)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return emailRegex.test(emailString);
+}
 
 function createBooking(roomId, room, bookingInfo) {
   const bookingId = uuid.v4();
