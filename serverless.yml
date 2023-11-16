@@ -45,7 +45,12 @@ functions:
           path: '/bookings/{roomId}'
           method: POST
 
-  
+  updateRoom:
+    handler: functions/updateBooking/index.handler
+    events:
+      - httpApi:
+          path: '/bookings/{roomId}/{bookingId}'
+          method: PATCH
 
 
 resources:
