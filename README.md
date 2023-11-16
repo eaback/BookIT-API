@@ -97,7 +97,7 @@ updateBooking:
 Some guests can never make up their minds. Luckilly, now they don't have to since a Booking can be updated!
 
 -------------
-DELETE /rooms/{roomId}/{bookingId} (Not sure about the endpoint!)
+DELETE /bookings/{roomId}/{bookingId} (Not sure about the endpoint!)
 -------------
 deleteBookings:
 So, you finally read the hotel reviews? Don't worry, you can cancel your booking here.
