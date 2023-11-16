@@ -52,6 +52,13 @@ functions:
           path: '/bookings/{roomId}'
           method: POST
 
+  deleteBooking:
+    handler: functions/deleteBooking/index.handler
+    events:
+      - httpApi:
+          path: '/rooms/bookings/{bookingId}'
+          method: DELETE
+
 
 
 
