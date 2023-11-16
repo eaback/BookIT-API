@@ -53,6 +53,10 @@ function isRoomFree(room, bookingInfo) {
 
   let result = { success: true, availability: "Room is available" };
 
+  if(bookings === undefined || bookings.length === 0) {
+    return result;
+  }
+
   bookings.every((booking) => {
     const bookedCheckInDate = new Date(booking.CheckInDate);
     const bookedCheckOutDate = new Date(booking.CheckOutDate);
