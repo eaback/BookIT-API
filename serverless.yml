@@ -52,12 +52,20 @@ functions:
           path: '/bookings/{roomId}'
           method: POST
 
+  updateRoom:
+    handler: functions/updateBooking/index.handler
+    events:
+      - httpApi:
+          path: '/bookings/{roomId}/{bookingId}'
+          method: PATCH
+
   getBookings:
     handler: functions/getBookings/index.handler
     events:
       - httpApi:
           path: '/bookings'
           method: GET
+
 
 
 
