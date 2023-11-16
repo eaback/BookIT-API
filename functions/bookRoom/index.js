@@ -7,22 +7,30 @@ exports.handler = async (event, context) => {
   const roomId = event.pathParameters.roomId;
   const bookingInfo = JSON.parse(event.body);
 
-  const roomResponse = await getRoom(roomId);
-
   const bookingInfoValidationResult = validateBookingInfo(bookingInfo);
 
-  return sendResponse(200, {
-    BookingInfoValidationResult: bookingInfoValidationResult,
-  });
+  if (!bookingInfoValidationResult.success) {
+    return sendResponse(400, {
+      BookingInfoValidationResult: bookingInfoValidationResult,
+    });
+  }
+  const roomResponse = await getRoom(roomId);
 
   if (!roomResponse.success) {
-    //First, we check for the room
+    //We check for the room
     // If it doesn't exist, return with response from getRoom
-    return sendResponse(400, roomResponse);
+    return sendResponse(404, roomResponse);
   }
   // Success! Let's extract the room for easier use.
   const room = roomResponse.room;
-  // We should have a new Booking object, too:
+
+  // We check if the wanted dates are available:
+  const roomIsFreeResponse = isRoomFree(room, bookingInfo);
+  if (!roomIsFreeResponse.success) {
+    return sendResponse(400, roomIsFreeResponse);
+  }
+
+  // Success! We create a new Booking object:
   const newBooking = createBooking(roomId, room, bookingInfo);
 
   // Now we have the room and Booking, so we proceed to book the room:
@@ -30,11 +38,37 @@ exports.handler = async (event, context) => {
 
   // Lets return whether the operation was successful or not
   return sendResponse(bookingResponse.success ? 200 : 400, {
-    response: bookingResponse,
-    room: roomResponse,
-    bookingInfo: bookingInfo,
+    success: bookingResponse.success,
+    existingBookings: room.Bookings,
+    bookingResponse: bookingResponse,
   });
 };
+
+// Check if the room is free the wanted date range
+function isRoomFree(room, bookingInfo) {
+  const bookings = room.Bookings;
+
+  const checkInDate = new Date(bookingInfo.CheckInDate);
+  const checkOutDate = new Date(bookingInfo.CheckOutDate);
+
+  let result = { success: true, availability: "Room is available" };
+
+  bookings.every((booking) => {
+    const bookedCheckInDate = new Date(booking.CheckInDate);
+    const bookedCheckOutDate = new Date(booking.CheckOutDate);
+    console.log(bookedCheckInDate, bookedCheckOutDate)
+    if (
+      (bookedCheckInDate <= checkInDate && checkInDate < bookedCheckOutDate) ||
+      (bookedCheckInDate < checkOutDate && checkOutDate <= bookedCheckOutDate)
+    ) {
+      result.success = false;
+      result.availability = "Room is already booked.";
+      return false;
+    }
+    return true;
+  });
+  return result;
+}
 
 // Validate booking information
 function validateBookingInfo(bookingInfo) {
@@ -49,25 +83,30 @@ function validateBookingInfo(bookingInfo) {
 
   let validationResult = {
     // we start off optimistically, adding failed checks later
-    Success: true,
+    success: true,
     UnexpectedProperties: "None",
     GuestName: {
+      success: true,
       property: "Check ok",
       value: "Check ok",
     },
     GuestEmail: {
+      success: true,
       property: "Check ok",
       value: "Check ok",
     },
     CheckInDate: {
+      success: true,
       property: "Check ok",
       value: "Check ok",
     },
     CheckOutDate: {
+      success: true,
       property: "Check ok",
       value: "Check ok",
     },
     TotalGuests: {
+      success: true,
       property: "Check ok",
       value: "Check ok",
     },
@@ -78,7 +117,7 @@ function validateBookingInfo(bookingInfo) {
   );
 
   if (unexpectedProperties.length > 0) {
-    validationResult.Success = false;
+    validationResult.success = false;
     validationResult.UnexpectedProperties = `${unexpectedProperties.join(
       ", "
     )}`;
@@ -87,28 +126,29 @@ function validateBookingInfo(bookingInfo) {
   // Check presence and type of each property
   for (const [property, expectedType] of Object.entries(expectedProperties)) {
     if (!bookingInfo.hasOwnProperty(property)) {
-      validationResult.Success = false;
+      validationResult.success = false;
       validationResult[
         property
       ].property = `${property} is missing in booking information`;
     }
 
     if (typeof bookingInfo[property] !== expectedType) {
-      validationResult.Success = false;
+      validationResult.success = false;
+      validationResult[property].success = false;
       validationResult[
         property
       ].value = `${property} should be of type ${expectedType}`;
     }
 
     if (expectedType === "string" && bookingInfo[property] === undefined) {
-      validationResult.Success = false;
+      validationResult.success = false;
+      validationResult[property].success = false;
       validationResult[property].value = `${property} does not exist`;
     } else if (
       expectedType === "string" &&
-      
       bookingInfo[property].trim() === ""
     ) {
-      validationResult.Success = false;
+      validationResult.success = false;
       validationResult[
         property
       ].value = `${property} should not be an empty string`;
@@ -118,35 +158,75 @@ function validateBookingInfo(bookingInfo) {
       expectedType === "number" &&
       (bookingInfo[property] < 1 || !Number.isInteger(bookingInfo[property]))
     ) {
-      validationResult.Success = false;
+      validationResult.success = false;
+      validationResult[property].success = false;
       validationResult[
         property
       ].value = `${property} should be a positive integer`;
     }
 
     if (
-      (property === "GuestEmail" && bookingInfo[property]) &&
+      property === "GuestEmail" &&
+      bookingInfo[property] &&
       !isValidEmailFormat(bookingInfo[property])
     ) {
-      validationResult.Success = false;
+      validationResult.success = false;
+      validationResult[property].success = false;
       validationResult[
         property
       ].value = `${property} is not a valid mail address`;
     }
 
     if (
-      ((property === "CheckInDate" && bookingInfo[property]) || (property === "CheckOutDate" && bookingInfo[property])) &&
+      ((property === "CheckInDate" && bookingInfo[property]) ||
+        (property === "CheckOutDate" && bookingInfo[property])) &&
       !isValidDateFormat(bookingInfo[property])
     ) {
-      validationResult.Success = false;
+      validationResult.success = false;
+      validationResult[property].success = false;
       validationResult[
         property
       ].value = `${property} should be a date string in this template: 'yyyy-mm-dd'`;
     }
   }
 
+  if (validationResult.success) {
+    const dateRangeValidationResult = isValidDateRange(
+      bookingInfo.CheckInDate,
+      bookingInfo.CheckOutDate
+    );
+    validationResult.success = dateRangeValidationResult.success;
+    validationResult.ValidDateRange = dateRangeValidationResult;
+  }
+
   // All checks done
   return validationResult;
+}
+
+function isValidDateRange(checkInString, checkOutString) {
+  let result = {
+    success: true,
+    range: "Check ok",
+    setInFuture: "Check ok",
+  };
+
+  const currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0); // It should be possible to book a room today.
+  //Note: I should maybe look into this. Should probably be a deadline: No bookings after a certain time.
+  const checkInDate = new Date(checkInString);
+  const checkOutDate = new Date(checkOutString);
+
+  if (currentDate > checkInDate) {
+    result.success = false;
+    result.setInFuture = "The checkInDate must be set in the future";
+  }
+  if (checkInDate >= checkOutDate) {
+    result.success = false;
+    result.range =
+      "The checkOutDate is set before or on the same date as the checkInDate";
+  }
+
+  return result;
 }
 
 function isValidDateFormat(dateString) {
