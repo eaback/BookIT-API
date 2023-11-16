@@ -3,7 +3,7 @@ const AWS = require('aws-sdk');
 const db = new AWS.DynamoDB.DocumentClient();
 
 exports.handler = async (event, context) => {
-    const { roomId } = event.pathParameters;
+    const { roomId, bookingId } = event.pathParameters;
 
     try {
         // Fetch the room details
@@ -17,13 +17,24 @@ exports.handler = async (event, context) => {
             return sendResponse(404, { success: false, message: 'Room not found' });
         }
 
-        // Remove the 'Bookings' array from the room details
-        delete roomDetails.Item.Bookings;
+        const room = roomDetails.Item;
+        // Find the index of the booking in the Bookings array
+        const bookingIndex = room.Bookings.findIndex((booking) => booking.BookingId === bookingId);
+
+        if (bookingIndex === -1) {
+            return sendResponse(404, { success: false, message: 'Booking not found' });
+        }
+
+        room.Bookings.splice(bookingIndex, 1);
 
         // Update the room without the 'Bookings' array
-        await db.put({
+        await db.update({
             TableName: 'rooms-db',
-            Item: roomDetails.Item
+            Key: { id: roomId },
+            UpdateExpression: 'set Bookings = :bookings',
+            ExpressionAttributeValues: {
+                ':bookings': room.Bookings
+            }
         }).promise();
 
         return sendResponse(200, { success: true });
