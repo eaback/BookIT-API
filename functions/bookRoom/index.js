@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
 
   if (!roomResponse.success) {
     // Are you trying to book a non-existing room?!
-    // Here are some neas for you.
+    // You better read this.
     return sendResponse(404, roomResponse);
   }
   // Success! Let's extract the room for easier use.
@@ -262,7 +262,7 @@ function createBooking(roomId, room, bookingInfo) {
   let newBooking = bookingInfo;
 
   newBooking["BookingId"] = `${bookingId}`;
-  newBooking["TotalNigths"] = totalNigths;
+  newBooking["TotalNights"] = totalNigths;
   newBooking["TotalPrice"] = totalPrice;
   newBooking["RoomId"] = roomId;
   newBooking["Status"] = "Confirmed";

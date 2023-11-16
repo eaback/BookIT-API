@@ -1,72 +1,106 @@
-<!--
-title: 'AWS NodeJS Example'
-description: 'This template demonstrates how to deploy a NodeJS function running on AWS Lambda using the traditional Serverless Framework.'
-layout: Doc
-framework: v3
-platform: AWS
-language: nodeJS
-priority: 1
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+BookIt
 
+An API for booking rooms at a hotel.
 
-# Serverless Framework AWS NodeJS Example
+URL: (to come)
 
-This template demonstrates how to deploy a NodeJS function running on AWS Lambda using the traditional Serverless Framework. The deployed function does not include any event definitions as well as any kind of persistence (database). For more advanced configurations check out the [examples repo](https://github.com/serverless/examples/) which includes integrations with SQS, DynamoDB or examples of functions that are triggered in `cron`-like manner. For details about configuration of specific `events`, please refer to our [documentation](https://www.serverless.com/framework/docs/providers/aws/events/).
+Endpoints:
 
-## Usage
-
-### Deployment
-
-In order to deploy the example, you need to run the following command:
-
-```
-$ serverless deploy
-```
-
-After running deploy, you should see output similar to:
-
-```bash
-Deploying aws-node-project to stage dev (us-east-1)
-
-✔ Service deployed to stack aws-node-project-dev (112s)
-
-functions:
-  hello: aws-node-project-dev-hello (1.5 kB)
-```
-
-### Invocation
-
-After successful deployment, you can invoke the deployed function by using the following command:
-
-```bash
-serverless invoke --function hello
-```
-
-Which should result in response similar to the following:
-
-```json
+-------------
+POST /rooms
+-------------
+postRoom:
+For the hotel owner who knows what they are doing, or the developer who needs something to work with.
+It has ABSOLUTELY NO error handling. You could add a dog instead of a room if you wanted, but that wouldn't make much sense, would it?
+Our rooms have the following structure:
 {
-    "statusCode": 200,
-    "body": "{\n  \"message\": \"Go Serverless v3.0! Your function executed successfully!\",\n  \"input\": {}\n}"
-}
-```
+			"PricePerNight": 500,
+			"Floor": 1,
+			"MaxGuests": 1,
+			"RoomNumber": "107",
+			"Id": "room7",
+			"id": "1699892325883",
+			"Type": "Single",
+			"Info": "Single room with balcony"
+		},
+		{
+			"PricePerNight": 500,
+			"Floor": 1,
+			"MaxGuests": 1,
+			"RoomNumber": "105",
+			"Id": "room5",
+			"id": "1699892184012",
+			"Type": "Single",
+			"Bookings": [
+				{
+					"Status": "Confirmed",
+					"CheckInDate": "2024-12-16",
+					"TotalNights": 5,
+					"TotalPrice": 1500,
+					"BookingId": "1dfd03b4-7ab0-4d06-9287-c7aa4bab5e8d",
+					"RoomId": "1699892184012",
+					"GuestName": "KalleTobbe",
+					"GuestEmail": "john.doe@example.se",
+					"TotalNigths": 3,
+					"CheckOutDate": "2024-12-19",
+					"TotalGuests": 1
+				}
+			],
+			"Info": "Single room with garden view"
+		}
+The observant reader/teacher will notice that there are two ids. The one we are actually using is the one the function adds, which is 'id'. The other one we added in our mock data and it can be ignored!
 
-### Local development
+-------------
+GET /rooms
+-------------
+getRooms:
+It gets the rooms. Or dogs.
 
-You can invoke your function locally by using the following command:
+-------------
+DELETE /rooms
+-------------
+deleteRoom:
+If the hotel gets a make over and knocks down some walls, some of the rooms migth be obsolete. Or you can use it to get rid of the dogs.
 
-```bash
-serverless invoke local --function hello
-```
+-------------
+GET /rooms/{roomId}
+-------------
+getRoom:
+Take a closer look at that special room.
 
-Which should result in response similar to the following:
-
-```
+-------------
+POST /bookings/{roomId}
+-------------
+bookRoom:
+This is used to book a specific room.
+You need to provide a JSON of the following template:
 {
-    "statusCode": 200,
-    "body": "{\n  \"message\": \"Go Serverless v3.0! Your function executed successfully!\",\n  \"input\": \"\"\n}"
+"GuestName": "John Doe",
+"GuestEmail": "john.doe@example.se",
+"CheckInDate": "2024-12-16",
+"CheckOutDate": "2024-12-19",
+"TotalGuests": 1
 }
-```
+Make sure you get it right, or you will be yelled at.
+If you provide a properly formatted request, the room will be booked IF it is available, and booking information will be sent as response. (A complete list of previous bookings will also be sent, please ignore if you are not a developer.)
+
+-------------
+GET /bookings
+-------------
+getBookings:
+We heard the people working at the hotel wanted to know when to expect guests. We delivered. Returns a list of all bookings, sorted by room.id and room.CheckInDate.
+
+-------------
+PATCH /rooms/{roomId}/{bookingId}
+-------------
+updateBooking:
+Some guests can never make up their minds. Luckilly, now they don't have to since a Booking can be updated!
+
+-------------
+DELETE /rooms/{roomId}/{bookingId} (Not sure about the endpoint!)
+-------------
+deleteBookings:
+So, you finally read the hotel reviews? Don't worry, you can cancel your booking here.
+
+
+
