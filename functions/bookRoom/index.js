@@ -10,6 +10,8 @@ exports.handler = async (event, context) => {
   const bookingInfoValidationResult = validateBookingInfo(bookingInfo);
 
   if (!bookingInfoValidationResult.success) {
+    // If the user has provided bad data for the booking request,
+    // we tell them so.
     return sendResponse(400, {
       BookingInfoValidationResult: bookingInfoValidationResult,
     });
@@ -17,8 +19,8 @@ exports.handler = async (event, context) => {
   const roomResponse = await getRoom(roomId);
 
   if (!roomResponse.success) {
-    //We check for the room
-    // If it doesn't exist, return with response from getRoom
+    // Are you trying to book a non-existing room?!
+    // Here are some neas for you.
     return sendResponse(404, roomResponse);
   }
   // Success! Let's extract the room for easier use.
@@ -27,6 +29,7 @@ exports.handler = async (event, context) => {
   // We check if the wanted dates are available:
   const roomIsFreeResponse = isRoomFree(room, bookingInfo);
   if (!roomIsFreeResponse.success) {
+    // No luck! Let's report the sad news
     return sendResponse(400, roomIsFreeResponse);
   }
 
