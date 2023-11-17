@@ -2,7 +2,13 @@ BookIt
 
 An API for booking rooms at a hotel.
 
-URL: (to come)
+Trello board: https://trello.com/b/sd33cdLq/sprint-board-bookit
+
+URL: 
+
+tobbe: https://eabwdzymne.execute-api.eu-north-1.amazonaws.com/
+Edgar: https://tnfguloasg.execute-api.eu-north-1.amazonaws.com/
+Philip: 
 
 Endpoints:
 
