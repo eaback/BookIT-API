@@ -26,6 +26,13 @@ exports.handler = async (event, context) => {
   // Success! Let's extract the room for easier use.
   const room = roomResponse.room;
 
+  // Is the room big enough for total number of guests?
+  const isRoomBigEnoughResponse = isRoomBigEnough(room, bookingInfo);
+  if (!isRoomBigEnoughResponse.success) {
+    // You should have booked a bigger room!
+    return sendResponse(400, isRoomBigEnoughResponse);
+  }
+
   // We check if the wanted dates are available:
   const roomIsFreeResponse = isRoomFree(room, bookingInfo);
   if (!roomIsFreeResponse.success) {
@@ -56,14 +63,14 @@ function isRoomFree(room, bookingInfo) {
 
   let result = { success: true, availability: "Room is available" };
 
-  if(bookings === undefined || bookings.length === 0) {
+  if (bookings === undefined || bookings.length === 0) {
     return result;
   }
 
   bookings.every((booking) => {
     const bookedCheckInDate = new Date(booking.CheckInDate);
     const bookedCheckOutDate = new Date(booking.CheckOutDate);
-    console.log(bookedCheckInDate, bookedCheckOutDate)
+    console.log(bookedCheckInDate, bookedCheckOutDate);
     if (
       (bookedCheckInDate <= checkInDate && checkInDate < bookedCheckOutDate) ||
       (bookedCheckInDate < checkOutDate && checkOutDate <= bookedCheckOutDate)
@@ -74,6 +81,22 @@ function isRoomFree(room, bookingInfo) {
     }
     return true;
   });
+  return result;
+}
+
+function isRoomBigEnough(room, bookingInfo) {
+  const maxGuests = room.MaxGuests;
+  const totalGuests = bookingInfo.TotalGuests;
+  let result = {
+    success: totalGuests <= maxGuests,
+    bigEnough: "The room can accommodate all guests.",
+  };
+
+  if (!result.success) {
+    result.bigEnough =
+      "The room cannot accommodate all guests. Try to book a bigger room, or book more than one room.";
+  }
+
   return result;
 }
 
