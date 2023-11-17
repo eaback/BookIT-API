@@ -1,16 +1,12 @@
 // Validate booking information
 function validateBookingInfo(bookingBody) {
-    // We start by checking we got a proper JSON:
-  let bookingInfo = null;
-
-  try {
-    bookingInfo = JSON.parse(bookingBody);
-  } catch (error) {
-    return {
-      success: false,
-      message: "The booking info needs to be in valid JSON format",
-    };
+  // We start by checking we got a proper JSON:
+  const jsonCheckResponse = validateJson(bookingBody);
+  if (!jsonCheckResponse.success) {
+    return jsonCheckResponse;
   }
+  // If we do, we extract it from the response
+  const bookingInfo = jsonCheckResponse.json;
 
   // Define expected properties and their types
   const expectedProperties = {
@@ -142,6 +138,19 @@ function validateBookingInfo(bookingBody) {
   // All checks done
   validationResult.bookingInfo = bookingInfo;
   return validationResult;
+}
+
+function validateJson(eventBody) {
+  let result = { success: true };
+
+  try {
+    result.json = JSON.parse(eventBody);
+  } catch (error) {
+    result.success = false;
+    result.message = "The booking info needs to be in valid JSON format";
+  }
+
+  return result;
 }
 
 function isValidDateRange(checkInString, checkOutString) {
