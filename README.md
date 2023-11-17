@@ -8,7 +8,7 @@ URL:
 
 tobbe: https://eabwdzymne.execute-api.eu-north-1.amazonaws.com/
 Edgar: https://tnfguloasg.execute-api.eu-north-1.amazonaws.com/
-Philip: 
+Philip: https://3zzjqt90ij.execute-api.eu-north-1.amazonaws.com/
 
 Endpoints:
 
